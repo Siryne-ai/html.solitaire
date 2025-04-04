@@ -1,350 +1,82 @@
+// Card data and images matching solitr.com
+const cardImages = {
+    back: 'https://www.solitr.com/images/card-back.png',
+    hearts: {
+        'A': 'https://www.solitr.com/images/cards/hearts/1.png',
+        '2': 'https://www.solitr.com/images/cards/hearts/2.png',
+        // Add all heart cards...
+    },
+    // Add other suits...
+};
+
 class SolitaireGame {
     constructor() {
-        this.suits = {
-            spades: { class: 'spades', color: 'black' },
-            hearts: { class: 'hearts', color: 'red' },
-            diamonds: { class: 'diamonds', color: 'red' }, 
-            clubs: { class: 'clubs', color: 'black' }
-        };
-        this.ranks = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
-        this.moves = 0;
-        this.selectedCard = null;
-    }
-    
-    init() {
         this.createDeck();
-        this.shuffleDeck();
-        this.setupTableau();
-        this.setupFoundations();
-        this.setupDrawPile();
-        this.setupEventListeners();
-        this.updateUI();
+        this.setupGame();
     }
-    
+
     createDeck() {
         this.deck = [];
-        for (const [suit, config] of Object.entries(this.suits)) {
-            for (let i = 0; i < 13; i++) {
+        const suits = ['hearts', 'diamonds', 'clubs', 'spades'];
+        const ranks = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+        
+        suits.forEach(suit => {
+            ranks.forEach(rank => {
                 this.deck.push({
                     suit,
-                    rank: this.ranks[i],
-                    value: i + 1,
-                    colorClass: config.color,
-                    suitClass: config.class,
-                    faceUp: false
+                    rank,
+                    color: (suit === 'hearts' || suit === 'diamonds') ? 'red' : 'black',
+                    image: cardImages[suit][rank]
                 });
-            }
-        }
-    }
-    
-    shuffleDeck() {
-        for (let i = this.deck.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [this.deck[i], this.deck[j]] = [this.deck[j], this.deck[i]];
-        }
-    }
-    
-    setupTableau() {
-        this.tableau = Array(7).fill().map(() => []);
-        for (let i = 0; i < 7; i++) {
-            for (let j = 0; j <= i; j++) {
-                const card = this.deck.pop();
-                card.faceUp = (j === i);
-                this.tableau[i].push(card);
-            }
-        }
-    }
-    
-    setupFoundations() {
-        this.foundations = {
-            hearts: [],
-            diamonds: [],
-            clubs: [],
-            spades: []
-        };
-    }
-    
-    setupDrawPile() {
-        this.drawPile = [...this.deck];
-        this.wastePile = [];
-    }
-    
-    setupEventListeners() {
-        document.addEventListener('click', (e) => {
-            try {
-                const cardEl = e.target.closest('.card');
-                if (!cardEl) {
-                    if (this.selectedCard) {
-                        this.selectedCard.classList.remove('selected');
-                        this.selectedCard = null;
-                    }
-                    return;
-                }
-                
-                if (cardEl.classList.contains('face-down')) {
-                    this.revealCard(cardEl);
-                    return;
-                }
-                
-                if (this.selectedCard) {
-                    this.moveCard(this.selectedCard, cardEl);
-                    this.selectedCard.classList.remove('selected');
-                    this.selectedCard = null;
-                } else {
-                    this.selectCard(cardEl);
-                }
-            } catch (error) {
-                console.error('Error handling click:', error);
-            }
-        });
-        
-        document.getElementById('redeal').addEventListener('click', () => this.redeal());
-        document.getElementById('new-game').addEventListener('click', () => {
-            if (confirm('Start a new game?')) {
-                this.init();
-                document.querySelector('.victory').style.display = 'none';
-            }
-        });
-    }
-    
-    updateUI() {
-        this.renderTableau();
-        this.renderFoundations();
-        this.renderDrawPile();
-        document.getElementById('moves').textContent = this.moves;
-        document.getElementById('redeal').textContent = 
-            `Draw (${this.drawPile.length + this.wastePile.length} left)`;
-    }
-    
-    renderTableau() {
-        const tableauEl = document.querySelector('.tableau');
-        if (!tableauEl) return;
-        
-        tableauEl.innerHTML = '';
-        
-        this.tableau.forEach((column, colIndex) => {
-            const colEl = document.createElement('div');
-            colEl.className = 'column';
-            
-            column.forEach((card, cardIndex) => {
-                const cardEl = this.createCardElement(card, cardIndex);
-                colEl.appendChild(cardEl);
             });
-            
-            tableauEl.appendChild(colEl);
         });
     }
-    
-    createCardElement(card, zIndex) {
-        const el = document.createElement('div');
-        el.className = `card ${card.colorClass} ${card.suitClass} ${
-            card.faceUp ? '' : 'face-down'
-        }`;
-        el.style.zIndex = zIndex;
-        el.dataset.suit = card.suit;
-        el.dataset.rank = card.value;
 
-        if (card.faceUp) {
-            el.innerHTML = `
-                <div class="rank">${card.rank}</div>
-                <div class="suit"></div>
-                <div class="bottom-suit"></div>
+    setupGame() {
+        // Setup tableau with 7 columns
+        const columns = document.querySelectorAll('.column');
+        columns.forEach((col, index) => {
+            // Add face-down cards
+            for (let i = 0; i < index; i++) {
+                this.addCardToColumn(col, true);
+            }
+            // Add face-up card
+            this.addCardToColumn(col, false);
+        });
+
+        // Setup stock
+        const stock = document.querySelector('.stock');
+        for (let i = 0; i < 24; i++) {
+            this.addCardToElement(stock, true);
+        }
+    }
+
+    addCardToColumn(column, faceDown) {
+        const card = document.createElement('div');
+        card.className = `card ${faceDown ? 'face-down' : ''}`;
+        if (!faceDown) {
+            card.innerHTML = `
+                <div class="rank top">${this.deck[0].rank}</div>
+                <div class="suit">${this.getSuitSymbol(this.deck[0].suit)}</div>
+                <div class="rank bottom">${this.deck[0].rank}</div>
             `;
+            card.style.color = this.deck[0].color;
         }
+        column.appendChild(card);
+        this.deck.shift();
+    }
 
-        return el;
-    }
-    
-    renderFoundations() {
-        document.querySelectorAll('.foundation').forEach(foundationEl => {
-            const suit = foundationEl.dataset.suit;
-            const cards = this.foundations[suit];
-            foundationEl.innerHTML = cards.length > 0 
-                ? this.createCardElement(cards[cards.length - 1], 0).outerHTML
-                : '';
-        });
-    }
-    
-    renderDrawPile() {
-        const drawPileEl = document.querySelector('.draw-pile');
-        if (drawPileEl) {
-            drawPileEl.innerHTML = this.drawPile.length > 0
-                ? '<div class="card face-down"></div>'
-                : '';
-        }
-        
-        const wastePileEl = document.querySelector('.waste-pile');
-        if (wastePileEl) {
-            wastePileEl.innerHTML = '';
-            this.wastePile.slice(-3).forEach(card => {
-                wastePileEl.appendChild(this.createCardElement(card, 0));
-            });
-        }
-    }
-    
-    selectCard(cardEl) {
-        document.querySelectorAll('.selected').forEach(c => c.classList.remove('selected'));
-        cardEl.classList.add('selected');
-        this.selectedCard = cardEl;
-    }
-    
-    moveCard(fromCardEl, toLocation) {
-        if (!fromCardEl || !toLocation) return;
-        
-        const fromCard = this.findCard(fromCardEl);
-        if (!fromCard) return;
-        
-        if (toLocation.classList?.contains('foundation')) {
-            const suit = toLocation.dataset.suit;
-            if (this.canMoveToFoundation(fromCard, suit)) {
-                this.moveToFoundation(fromCard, suit);
-                this.moves++;
-                this.updateUI();
-            }
-            return;
-        }
-        
-        if (toLocation.classList?.contains('card')) {
-            const toCard = this.findCard(toLocation);
-            if (this.isValidTableauMove(fromCard, toCard)) {
-                const fromCol = this.findColumn(fromCard);
-                const toCol = this.findColumn(toCard);
-                const fromIndex = fromCol.indexOf(fromCard);
-                
-                toCol.push(...fromCol.splice(fromIndex));
-                this.moves++;
-                this.updateUI();
-            }
-        }
-        else if (toLocation.classList?.contains('column')) {
-            if (fromCard.rank === 'K') {
-                const fromCol = this.findColumn(fromCard);
-                const toColIndex = Array.from(document.querySelectorAll('.column')).indexOf(toLocation);
-                const fromIndex = fromCol.indexOf(fromCard);
-                
-                this.tableau[toColIndex].push(...fromCol.splice(fromIndex));
-                this.moves++;
-                this.updateUI();
-            }
-        }
-    }
-    
-    isValidTableauMove(fromCard, toCard) {
-        if (!fromCard || !toCard) return false;
-        
-        const differentColors = fromCard.colorClass !== toCard.colorClass;
-        const descendingRank = fromCard.value === toCard.value - 1;
-        
-        return differentColors && descendingRank;
-    }
-    
-    canMoveToFoundation(card, foundationSuit) {
-        if (!card || !foundationSuit) return false;
-        if (card.suit !== foundationSuit) return false;
-        
-        const foundation = this.foundations[foundationSuit];
-        if (!foundation) return false;
-        
-        if (foundation.length === 0) {
-            return card.rank === 'A';
-        } else {
-            return card.value === foundation[foundation.length - 1].value + 1;
-        }
-    }
-    
-    moveToFoundation(card, suit) {
-        const column = this.findColumn(card);
-        if (!column) return;
-        
-        const index = column.indexOf(card);
-        if (index === column.length - 1) {
-            this.foundations[suit].push(column.pop());
-            this.revealTopTableauCard();
-            this.checkWinCondition();
-        }
-    }
-    
-    revealCard(cardEl) {
-        if (!cardEl) return;
-        
-        const col = cardEl.closest('.column');
-        if (!col) return;
-        
-        const card = this.findCard(cardEl);
-        if (!card) return;
-        
-        card.faceUp = true;
-        this.moves++;
-        this.updateUI();
-    }
-    
-    redeal() {
-        if (this.drawPile.length === 0) {
-            this.drawPile = [...this.wastePile.reverse()];
-            this.wastePile = [];
-        }
-        
-        const drawnCards = this.drawPile.splice(0, 3);
-        drawnCards.forEach(card => card.faceUp = true);
-        this.wastePile.push(...drawnCards);
-        this.moves++;
-        this.updateUI();
-    }
-    
-    findCard(cardEl) {
-        if (!cardEl || !cardEl.dataset) return null;
-        
-        const { suit, rank } = cardEl.dataset;
-        if (!suit || !rank) return null;
-        
-        // Search tableau
-        for (const column of this.tableau) {
-            const card = column.find(c => 
-                c.rank === rank && 
-                c.suit === suit
-            );
-            if (card) return card;
-        }
-        
-        // Search waste pile
-        return this.wastePile.find(c => 
-            c.rank === rank && 
-            c.suit === suit
-        ) || null;
-    }
-    
-    findColumn(card) {
-        if (!card) return null;
-        
-        const tableauCol = this.tableau.find(col => col.includes(card));
-        if (tableauCol) return tableauCol;
-        
-        return this.wastePile.includes(card) ? this.wastePile : null;
-    }
-    
-    revealTopTableauCard() {
-        this.tableau.forEach(column => {
-            if (column.length > 0 && !column[column.length - 1].faceUp) {
-                column[column.length - 1].faceUp = true;
-            }
-        });
-    }
-    
-    checkWinCondition() {
-        const allComplete = Object.values(this.foundations).every(f => f.length === 13);
-        if (allComplete) {
-            const victoryEl = document.querySelector('.victory');
-            if (victoryEl) victoryEl.style.display = 'block';
+    getSuitSymbol(suit) {
+        switch(suit) {
+            case 'hearts': return '♥';
+            case 'diamonds': return '♦';
+            case 'clubs': return '♣';
+            case 'spades': return '♠';
         }
     }
 }
 
+// Initialize game
 document.addEventListener('DOMContentLoaded', () => {
-    try {
-        const game = new SolitaireGame();
-        game.init();
-    } catch (error) {
-        console.error('Game initialization failed:', error);
-        alert('Game failed to load. Please refresh the page.');
-    }
+    new SolitaireGame();
 });
