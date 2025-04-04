@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Classic Solitaire</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="game-container">
+        <div class="controls">
+            <button id="redeal">Draw (3 left)</button>
+            <button id="new-game">New Game</button>
+            <div>Moves: <span id="moves">0</span></div>
+        </div>
+        <div class="top-area">
+            <div class="foundation" data-suit="hearts"></div>
+            <div class="foundation" data-suit="diamonds"></div>
+            <div class="foundation" data-suit="clubs"></div>
+            <div class="foundation" data-suit="spades"></div>
+            <div class="draw-pile"></div>
+            <div class="waste-pile"></div>
+        </div>
+        <div class="tableau"></div>
+    </div>
+    <div class="victory">🎉 You Win! 🎉</div>
+
+    <script src="script.js"></script>
+</body>
+</html>
