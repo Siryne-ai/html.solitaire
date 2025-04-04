@@ -1,0 +1,117 @@
+body {
+    background: #35654d;
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 20px;
+    user-select: none;
+}
+
+.game-container {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.top-area {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 30px;
+}
+
+.foundation, .draw-pile, .waste-pile {
+    width: 80px;
+    height: 120px;
+    border-radius: 5px;
+    border: 1px solid #333;
+    background: rgba(255,255,255,0.1);
+}
+
+.tableau {
+    display: flex;
+    gap: 15px;
+}
+
+.column {
+    min-width: 80px;
+    position: relative;
+}
+
+.card {
+    width: 80px;
+    height: 120px;
+    position: absolute;
+    border: 1px solid #000;
+    border-radius: 5px;
+    background: white;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 5px;
+    box-sizing: border-box;
+    cursor: pointer;
+}
+
+.card.red { color: #d40000; }
+.card.black { color: #000; }
+
+.face-down {
+    background: #1a5fb4;
+    background-image: 
+        radial-gradient(circle at 50% 50%, #1a5fb4 40%, #0d4b8f 60%),
+        repeating-linear-gradient(45deg, #0d4b8f 0px, #0d4b8f 2px, #1a5fb4 2px, #1a5fb4 4px);
+}
+
+.selected {
+    transform: translateY(-10px);
+    box-shadow: 0 0 10px gold;
+}
+
+.victory {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0,0,0,0.9);
+    color: gold;
+    padding: 20px;
+    border-radius: 10px;
+    display: none;
+    z-index: 100;
+}
+
+.column .card:not(:first-child) {
+    margin-top: 25px;
+}
+
+.spades::after { content: '♠'; }
+.hearts::after { content: '♥'; }
+.diamonds::after { content: '♦'; }
+.clubs::after { content: '♣'; }
+
+.controls {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    background: rgba(0,0,0,0.3);
+    padding: 10px;
+    border-radius: 5px;
+    color: white;
+}
+
+button {
+    background: #4CAF50;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 4px;
+    color: white;
+    cursor: pointer;
+    margin: 5px;
+}
+
+button:hover {
+    background: #45a049;
+}
+
+button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
